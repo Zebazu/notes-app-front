@@ -82,54 +82,12 @@ const NotesList: React.FC = () => {
           },
         }
       );
-      console.log(...notes);
-      console.log(response.data);
       setNotes([...notes, response.data.note]);
       setNewTitle("");
       setNewDescription(""); // Limpia los campos de entrada
-      toast({
-        title: "Nota agregada",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+
     } catch (error) {
-      toast({
-        title: "Error agregando nota",
-        description: "No se pudo agregar la nota",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  };
-
-  // Eliminar una tarea
-  const deleteNote = async (id: number) => {
-    try {
-      const updatedNotes = notes.filter((note) => note.id !== id);
-      setNotes(updatedNotes);
-
-      await axios.delete(`http://localhost:5000/notas/${id}`, {
-        headers: {
-          Authorization: `Bearer ${fetchToken()}`,
-        },
-      });
-
-      toast({
-        title: "Nota borrada",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: "Error borrando nota",
-        description: "No se pudo borrar la nota",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      console.error(error);
     }
   };
 

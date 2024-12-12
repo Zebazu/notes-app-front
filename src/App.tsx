@@ -17,9 +17,7 @@ const App: React.FC = () => {
             <Route path="/" element={<AuthView/>} />
             <Route
               path="/notas"
-              element={
-                <NoteList />
-              }
+              element={<ProtectedRoute element={<NoteList />} />}
             />
           </Routes>
         </Router>
