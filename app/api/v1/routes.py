@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from app.domain.models.note_model import NoteHistory
 from app.infrastructure.repository.note_repository import create_note, erase_note, update_existing_note
 from app.services.dto.note_dto import NoteDTO
 from app.services.dto.user_dto import UserDTO
@@ -51,7 +52,7 @@ def add_note(note: NoteDTO, db: Session = Depends(get_db), current_user: dict = 
     
     try:
         created_note = create_note(db=db, title=note.title, description=note.description, time=note.time, user_id=user_id)
-        return {"message": "Note created successfully", "note_id": created_note.id}
+        return {"message": "Note created successfully",  "note":created_note}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
@@ -83,3 +84,8 @@ def delete_note(
         raise HTTPException(status_code=400, detail=str(e))
     
     return {"message": "Note deleted successfully"}
+
+@router.get("/notes/{note_id}/history")
+def get_note_history(note_id: int, db: Session = Depends(get_db)):
+    history = db.query(NoteHistory).filter(NoteHistory.note_id == note_id).all()
+    return {"history": history}
