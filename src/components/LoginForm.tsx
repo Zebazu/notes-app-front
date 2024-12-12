@@ -27,8 +27,8 @@ const LoginForm: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-        //await login(email, password);
-        alert(`Logging in with Email: ${email}, Password: ${password}`);
+        await login(email, password);
+        alert(`Logging con Email: ${email}, Password: ${password}`);
         navigate("/notas");
     }catch (err){
         alert("ERRRRROOOR");

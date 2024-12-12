@@ -10,17 +10,19 @@ import {
   Text,
   Input,
   Button,
+  useDisclosure,
 } from "@chakra-ui/react";
-import {Checkbox} from "@chakra-ui/checkbox";
 import {useToast} from "@chakra-ui/toast";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
+import EditNoteModal from "./EditNoteModal";
+import DeleteNote from "./DeleteNoteModal";
 
 interface Notes {
   id: number;
   title: string;
   description: string;
-  completed: boolean;
+  timestamp: string
 }
 
 const NotesList: React.FC = () => {
@@ -29,18 +31,20 @@ const NotesList: React.FC = () => {
   const [newDescription, setNewDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const toast = useToast();
-  //const { token } = useAuth();
+  const { fetchToken } = useAuth();
+  const [selectedNote, setSelectedNote] = useState<Notes | null>(null);
+  const { open, onOpen, onClose } = useDisclosure();
 
   // Obtener tareas desde el servidor
   const fetchNotes = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/notas", {
+      const response = await axios.get("http://localhost:8000/api/v1/notes", {
         headers: {
-          //Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${fetchToken()}`,
         },
       });
-      setNotes(response.data);
+      setNotes(response.data.notes);
     } catch (error) {
       toast({
         title: "Error cargando lista de notas",
@@ -68,17 +72,19 @@ const NotesList: React.FC = () => {
     }
 
     try {
+
       const response = await axios.post(
-        "http://localhost:5000/notas",
+        "http://localhost:8000/api/v1/notes",
         { title: newTitle, description: newDescription },
         {
           headers: {
-            //Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${fetchToken()}`,
           },
         }
       );
-
-      setNotes([...notes, response.data]);
+      console.log(...notes);
+      console.log(response.data);
+      setNotes([...notes, response.data.note]);
       setNewTitle("");
       setNewDescription(""); // Limpia los campos de entrada
       toast({
@@ -98,35 +104,6 @@ const NotesList: React.FC = () => {
     }
   };
 
-
-  //Actualizar una nota
-  const toggleNotes = async (id: number) => {
-    try {
-      const updatedNotes = notes.map((note) =>
-        note.id === id ? { ...note, completed: !note.completed } : note
-      );
-      setNotes(updatedNotes);
-
-      await axios.put(
-        `http://localhost:5000/notas/${id}`,
-        { completed: !notes.find((note) => note.id === id)?.completed },
-        {
-          headers: {
-            //Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-    } catch (error) {
-      toast({
-        title: "Error actualizando nota",
-        description: "No se pudo actualizar la nota",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  };
-
   // Eliminar una tarea
   const deleteNote = async (id: number) => {
     try {
@@ -135,7 +112,7 @@ const NotesList: React.FC = () => {
 
       await axios.delete(`http://localhost:5000/notas/${id}`, {
         headers: {
-          //Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${fetchToken()}`,
         },
       });
 
@@ -163,7 +140,7 @@ const NotesList: React.FC = () => {
   if (loading) {
     return (
       <Box textAlign="center" mt={10}>
-        <Spinner size="xl" />
+        <Spinner size="xl" />    
         <Text mt={4}>Cargando Notas</Text>
       </Box>
     );
@@ -204,33 +181,61 @@ const NotesList: React.FC = () => {
           >
             <Input
               placeholder="Título"
-              value={newTitle}
+              value={note.title}
               onChange={(e) => setNewTitle(e.target.value)}
             />
             <Input
               placeholder="Descripción"
-              value={newDescription}
+              value={note.description}
               onChange={(e) => setNewDescription(e.target.value)}
             />
-            <Button colorScheme="teal" onClick={addNotes}>
-              Agregar Tarea
-            </Button>
-            <IconButton
-              aria-label="Actualziar Nota"
-              size="sm"
-              colorScheme="green"
-              onClick={() => toggleNotes(note.id)}
+            <Input
+              placeholder="Tiempo creada"
+              value={note.timestamp}
+              onChange={(e) => setNewDescription(e.target.value)}
             />
+            
             <IconButton
-              aria-label="Borrar Nota"
+              aria-label="Editar Nota"
               size="sm"
-              colorScheme="red"
-              onClick={() => deleteNote(note.id)}
+              colorScheme="blue"
+              onClick={() => {
+                setSelectedNote(note);
+                onOpen();
+              }}
             />
+            
+                
+                  <DeleteNote
+                    noteId={note.id}
+                    fetchToken={fetchToken}
+                    onDeleteSuccess={() => {
+                      const updatedNotes = notes.filter((n) => n.id !== note.id);
+                      setNotes(updatedNotes);
+                    }}
+                  />
+                
+              
+            
+            
           </HStack>
         ))}
       </VStack>
+      {selectedNote && (
+  <EditNoteModal
+    noteId={selectedNote.id}
+    isOpen={open}
+    onClose={() => {
+      onClose();
+      setSelectedNote(null);
+      fetchNotes();
+    }}
+      />
+      
+    )}
     </Box>
+    
+    
   );
 };
 
