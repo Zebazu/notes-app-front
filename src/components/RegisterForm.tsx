@@ -11,18 +11,29 @@ import {
     FormControl,
     FormLabel,
   } from '@chakra-ui/form-control'
+import axios from "axios";
 
 const RegisterForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-    alert(`Registering with Email: ${email}, Password: ${password}`);
+    
+      try{
+      const response = await axios.post(
+        "http://localhost:8000/api/v1/register",
+        { username: email, password: password },
+        
+      )}catch(error){
+        console.error (error);
+      }
+    
+    alert(`Registering with username: ${email}`);
   };
 
   return (
